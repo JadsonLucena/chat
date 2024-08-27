@@ -1,0 +1,36 @@
+{
+  "name": "@jadsonlucena/chat",
+  "version": "0.1.0",
+  "description": "Chat",
+  "main": "./server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --trace-warnings ./server.js"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JadsonLucena/chat.git"
+  },
+  "keywords": [
+    "chat"
+  ],
+  "author": "JadsonLucena <jadsonlucena@gmail.com> (https://github.com/JadsonLucena)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JadsonLucena/chat/issues"
+  },
+  "homepage": "https://github.com/JadsonLucena/chat#readme",
+	"dependencies": {
+		"express": "latest"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  }
+}
