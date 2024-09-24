@@ -6,17 +6,25 @@ export default class WS {
 
 	constructor(websocketURL) {
 		this.#emitter = new Emitter()
-		this.#webSocket = new WebSocket(websocketURL)
-		this.#webSocket.onclose = e => this.#emitter.emit('close', e)
-		this.#webSocket.onerror = e => this.#emitter.emit('error', e)
-		this.#webSocket.onopen = e => this.#emitter.emit('open', e)
-		this.#webSocket.onmessage = e => this.#emitter.emit('message', e)
-
+		this.websocketURL = websocketURL
 	}
 
-	// async close() {
-	// 	this.#webSocket.close()
-	// }
+	async start() {
+		this.#webSocket = new WebSocket(websocketURL)
+		this.#webSocket.onclose = e => this.#emitter.emit('close', e)
+		this.#webSocket.onmessage = e => this.#emitter.emit('message', e)
+
+		await new Promise((resolve, reject) => {
+			this.#webSocket.onopen = e => {
+				resolve(e)
+				this.#emitter.emit('open', e)
+			}
+			this.#webSocket.onerror = e => {
+				reject(e)
+				this.#emitter.emit('error', e)
+			}
+		})
+	}
 
 	send(message) {
 		this.#webSocket.send(message)

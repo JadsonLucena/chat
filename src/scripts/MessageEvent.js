@@ -3,8 +3,9 @@ import Emitter from 'https://cdn.jsdelivr.net/gh/JadsonLucena/Emitter.mjs@2.0.0/
 export default class ME {
 	#emitter
 
-	constructor() {
+	constructor(crypto) {
 		this.#emitter = new Emitter()
+		this.crypto = crypto
 
 		window.addEventListener('message', e => this.#emitter.emit('message', e))
 	}

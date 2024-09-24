@@ -1,74 +1,77 @@
 export default class Chat {
-	constructor({ messageBroker, roomName, status = 'online' }) {
-		this.messageBroker = messageBroker
+	constructor(roomName, cryptoRSA) {
 		this.roomName = roomName
-		
-		this.me = this.getMe()
-		this.users = []
+		this.cryptoRSA = cryptoRSA
 
-		this.messages = []
+		const messages = sessionStorage.getItem(`chat:messages:${roomName}`)
+		this.messages = messages ? JSON.parse(messages) : []
 
-		sessionStorage.setItem('chat-user', JSON.stringify(me))
-
-		messageBroker.on('message', e => {
-			let data = JSON.parse(e.data)
-
-			if (this.validateMessage(data)) {
-				switch(data.type) {
-					case 'participant':
-						this.addUser(data)
-					break
-					case 'message':
-						this.addMessage(data)
-					break
-					case 'user:settings':
-					
-					break
-					case 'message:settings':
-					
-					break
-				}
-			}
-		})
-
-		this.addUser({
-			...this.me,
-			status
-		})
+		this.#loadMessages()
 	}
 
-	addMessage(message) {
-		this.messages.push(message)
-
-		this.showMessage(message)
-	}
-
-	addUser({
-		id,
-		name,
-		thumb,
-		status
-	}) {
-		users[id] = {
-			name,
-			thumb,
-			status
+	messageCommand(message, {
+		targetUserId = undefined,
+		sourceMessageId = this.me.id
+	} = {}) {
+		return {
+			type: 'chat',
+			roomName: this.roomName,
+			sourceMessageId,
+			sourceUserId: this.me.id,
+			targetUserId,
+			data: this.cryptoRSA.encrypt(JSON.stringify({
+				id: crypto.randomUUID(),
+				type: 'text/plain',
+				payload: message,
+				timestamp: Date.now()
+			}))
 		}
-
-		this.messageBroker.send(JSON.stringify({
-			type: 'participant',
-			roomName,
-			data: {
-				id: id,
-				name: name,
-				thumb: thumb,
-				status
-			}
-		}))
 	}
 
-	showMessage(message) {
-		const user = users[message.sourceUserId.trim()]
+	async attachmentCommand(file, {
+		targetUserId = undefined,
+		sourceMessageId,
+		description
+	} = {}) {
+		return {
+			type: 'chat',
+			roomName: this.roomName,
+			sourceMessageId,
+			sourceUserId: this.me.id,
+			targetUserId,
+			data: this.cryptoRSA.encrypt(JSON.stringify({
+				id: crypto.randomUUID(),
+				type: file.type,
+				payload: await this.#loadFileAsBase64(file),
+				name: file.name,
+				description,
+				timestamp: Date.now()
+			})),
+		}
+	}
+
+	exec(message) {
+		if (this.#validateMessage(message)) {
+			message.data = JSON.parse(this.cryptoRSA.decrypt(message.data))
+
+			this.messages[message.id] = message
+
+			sessionStorage.setItem(`chat:messages:${roomName}`, JSON.stringify(this.messages))
+
+			this.#showMessage(message)
+		}
+	}
+
+	#loadMessages() {
+		const sortedMessages = Object.values(this.messages).sort((a, b) => a.data.timestamp - b.data.timestamp)
+
+		for (const message of sortedMessages) {
+			this.#showMessage(message)
+		}
+	}
+
+	#showMessage(message) {
+		const user = this.users[message.sourceUserId.trim()]
 
 		const channels = message.targetUserId?.trim() ? `ul.channels[class~='${message.targetUserId?.trim()}']` : `ul[class='channels']`
 
@@ -81,72 +84,11 @@ export default class Chat {
 				<span title="Menu">:</span>
 			</header>
 			<section>${message.data.payload.trim()}</section>
-			<footer>${new Date(message.dateTime.trim()).toLocaleString()}</footer>
+			<footer>${new Date(message.data.timestamp).toLocaleString()}</footer>
 		</li>`)
 	}
 
-	getMe() {
-		const me = sessionStorage.getItem('chat-user')
-
-		if (
-			!me ||
-			(
-				searchParams.has('userId') && searchParams.get('userId') != me.id ||
-				searchParams.has('userName') && searchParams.get('userName') != me.name ||
-				searchParams.has('userThumb') && searchParams.get('userThumb') != me.thumb
-			)
-		) {
-			return {
-				id: searchParams.get('userId') || crypto.randomUUID(),
-				name: searchParams.get('userName') || prompt(`What's your name?`),
-				thumb: searchParams.get('userThumb'),
-			}
-		}
-
-		return JSON.parse(me)
-	}
-
-	sendMessage(message, {
-		targetUserId,
-		sourceMessageId
-	}) {
-		this.messageBroker.send(JSON.stringify({
-			type: 'message',
-			roomName: this.roomName,
-			sourceMessageId,
-			sourceUserId: this.me.id,
-			targetUserId,
-			data: {
-				id: crypto.randomUUID(),
-				type: 'text/plain',
-				payload: message
-			},
-			dateTime: Date.now()
-		}))
-	}
-
-	async sendFile(targetUserId, file, {
-		sourceMessageId,
-		description
-	}) {
-		this.messageBroker.send(JSON.stringify({
-			type: 'chat',
-			roomName: this.roomName,
-			sourceMessageId,
-			sourceUserId: this.me.id,
-			targetUserId,
-			data: {
-				id: crypto.randomUUID(),
-				type: file.type,
-				payload: await this.loadFileAsBase64(file),
-				name: file.name,
-				description
-			},
-			dateTime: Date.now()
-		}))
-	}
-
-	loadFileAsBase64(file) {
+	#loadFileAsBase64(file) {
 		return new Promise((resolve, reject) => {
 			const fileReader = new FileReader()
 			fileReader.onload = e => resolve(e.target.result)
@@ -155,8 +97,5 @@ export default class Chat {
 		})
 	}
 
-	validateMessage(message) {
-		// this.verifySignature(message)
-	}
-	verifySignature(message) {}
+	#validateMessage(message) {}
 }

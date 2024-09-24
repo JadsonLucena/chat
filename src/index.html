@@ -184,7 +184,7 @@
 				<input type="file" name="attachment" id="attachment" accept="audio/*, application/*, image/*, video/*">
 			</label>
 
-			<div id="message"></div>
+			<div id="text_editor"></div>
 
 			<button type="submit" name="send" id="send">
 				<svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" xml:space="preserve"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.623,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
@@ -194,32 +194,6 @@
 
 	</footer>
 
-	
-	<script src="./scripts/index.js"></script>
-
-	<script src="https://cdn.ckeditor.com/ckeditor5/35.2.1/balloon/ckeditor.js"></script>
-	<script>
-
-		const editor = BalloonEditor.create(message, {
-			placeholder: 'Message',
-			toolbar: [
-				'heading', 'paragraph', '|',
-				'bold', 'italic', 'link', '|',
-				'bulletedList', 'numberedList', 'todoList', '|',
-				'code', 'codeBlock', 'blockQuote', '|',
-				'undo', 'redo'
-			]
-		})
-		.then(editor => {
-
-			editor.focus();
-
-			return editor;
-
-		})
-		.catch(console.error);
-
-	</script>
-
+	<script type="module" src="./scripts/index.js"></script>
 </body>
 </html>
